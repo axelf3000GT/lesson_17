@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PostmanEchoTests {
 
@@ -27,8 +27,10 @@ public class PostmanEchoTests {
                 .when()
                 .get("/get");
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getMap("args")).containsAllEntriesOf(queryParams);
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertEquals(queryParams, response.jsonPath().getMap("args"))
+        );
     }
 
     @Test
@@ -43,25 +45,28 @@ public class PostmanEchoTests {
                 .when()
                 .post("/post");
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getMap("json")).isEqualTo(payload);
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertEquals(payload, response.jsonPath().getMap("json"))
+        );
     }
 
     @Test
     @Order(3)
     void testPostFormData() {
-        // Создаем параметры формы
         Map<String, String> formParams = new HashMap<>();
         formParams.put("key", "value");
 
         Response response = given()
                 .contentType("multipart/form-data")
-                .multiPart("key", "value")  // Используем multiPart вместо formParams
+                .multiPart("key", "value")
                 .when()
                 .post("/post");
 
-        assertThat(response.getStatusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getMap("form")).isEqualTo(formParams);
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertEquals(formParams, response.jsonPath().getMap("form"))
+        );
     }
 
     @Test
@@ -76,8 +81,10 @@ public class PostmanEchoTests {
                 .when()
                 .put("/put");
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getMap("json")).isEqualTo(payload);
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertEquals(payload, response.jsonPath().getMap("json"))
+        );
     }
 
     @Test
@@ -92,8 +99,10 @@ public class PostmanEchoTests {
                 .when()
                 .patch("/patch");
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getMap("json")).isEqualTo(payload);
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertEquals(payload, response.jsonPath().getMap("json"))
+        );
     }
 
     @Test
@@ -103,11 +112,12 @@ public class PostmanEchoTests {
                 .when()
                 .delete("/delete");
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getString("data")).isEqualTo("[:]");
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertEquals("[:]", response.jsonPath().getString("data"))
+        );
     }
 
-    // --- HEAD ---
     @Test
     @Order(7)
     void testHeadRequest() {
@@ -115,11 +125,12 @@ public class PostmanEchoTests {
                 .when()
                 .head("/get");
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body().asString()).isEmpty(); // HEAD не возвращает тело
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertTrue(response.body().asString().isEmpty())
+        );
     }
 
-    // --- OPTIONS ---
     @Test
     @Order(8)
     void testOptionsRequest() {
@@ -127,7 +138,9 @@ public class PostmanEchoTests {
                 .when()
                 .options("/get");
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.header("Allow")).isNotNull(); // Проверяем заголовок Allow
+        assertAll(
+                () -> assertEquals(200, response.statusCode()),
+                () -> assertNotNull(response.header("Allow"))
+        );
     }
 }
