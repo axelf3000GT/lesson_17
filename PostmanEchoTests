@@ -1,0 +1,133 @@
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import java.util.HashMap;
+import java.util.Map;
+import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class PostmanEchoTests {
+
+    @BeforeAll
+    static void setup() {
+        RestAssured.baseURI = "https://postman-echo.com";
+    }
+
+    @Test
+    @Order(1)
+    void testGetRequest() {
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("foo1", "bar1");
+        queryParams.put("foo2", "bar2");
+
+        Response response = given()
+                .queryParams(queryParams)
+                .when()
+                .get("/get");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.jsonPath().getMap("args")).containsAllEntriesOf(queryParams);
+    }
+
+    @Test
+    @Order(2)
+    void testPostRawJson() {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("key", "value");
+
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .post("/post");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.jsonPath().getMap("json")).isEqualTo(payload);
+    }
+
+    @Test
+    @Order(3)
+    void testPostFormData() {
+        // Создаем параметры формы
+        Map<String, String> formParams = new HashMap<>();
+        formParams.put("key", "value");
+
+        Response response = given()
+                .contentType("multipart/form-data")
+                .multiPart("key", "value")  // Используем multiPart вместо formParams
+                .when()
+                .post("/post");
+
+        assertThat(response.getStatusCode()).isEqualTo(200);
+        assertThat(response.jsonPath().getMap("form")).isEqualTo(formParams);
+    }
+
+    @Test
+    @Order(4)
+    void testPutRequest() {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("key", "updated_value");
+
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .put("/put");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.jsonPath().getMap("json")).isEqualTo(payload);
+    }
+
+    @Test
+    @Order(5)
+    void testPatchRequest() {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("key", "patched_value");
+
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .patch("/patch");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.jsonPath().getMap("json")).isEqualTo(payload);
+    }
+
+    @Test
+    @Order(6)
+    void testDeleteRequest() {
+        Response response = given()
+                .when()
+                .delete("/delete");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.jsonPath().getString("data")).isEqualTo("[:]");
+    }
+
+    // --- HEAD ---
+    @Test
+    @Order(7)
+    void testHeadRequest() {
+        Response response = given()
+                .when()
+                .head("/get");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body().asString()).isEmpty(); // HEAD не возвращает тело
+    }
+
+    // --- OPTIONS ---
+    @Test
+    @Order(8)
+    void testOptionsRequest() {
+        Response response = given()
+                .when()
+                .options("/get");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.header("Allow")).isNotNull(); // Проверяем заголовок Allow
+    }
+}
